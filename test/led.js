@@ -506,6 +506,8 @@ exports["Led.RGB"] = {
     }, {
       name: "strobe"
     }, {
+      name: "blink"
+    }, {
       name: "stop"
     }];
 
@@ -595,6 +597,12 @@ exports["Led.RGB"] = {
     test.ok(this.analog.calledWith(11, 0));
 
     test.done();
+  },
+
+  blink: function(test) {
+    test.expect(1);
+    test.equal(this.ledRgb.blink, this.ledRgb.strobe);
+    test.done();
   }
 
 };
@@ -615,10 +623,10 @@ exports["Led.RGB - Common Anode"] = {
     });
 
     this.io = {
-      analogWrite: function (pin, value) {}
+      analogWrite: function(pin, value) {}
     };
 
-    this.board.io.analogWrite = function (pin, value) {
+    this.board.io.analogWrite = function(pin, value) {
       value = 255 - value;
       this.io.analogWrite(pin, value);
     }.bind(this);
@@ -643,6 +651,8 @@ exports["Led.RGB - Common Anode"] = {
       name: "fadeOut"
     }, {
       name: "strobe"
+    }, {
+      name: "blink"
     }, {
       name: "stop"
     }];
@@ -713,6 +723,12 @@ exports["Led.RGB - Common Anode"] = {
     test.ok(this.spy.calledWith(11, 255));
 
     test.done();
+  },
+
+  blink: function(test) {
+    test.expect(1);
+    test.equal(this.ledRgb.blink, this.ledRgb.strobe);
+    test.done();
   }
 
 };
@@ -735,7 +751,9 @@ exports["Led - Default Pin w/ Firmata"] = {
     sinon.stub(five.Board.Pins.prototype, "isPwm").returns(true);
 
     test.equal(new Led(12).mode, 3);
-    test.equal(new Led({ type: "PWM" }).mode, 3);
+    test.equal(new Led({
+      type: "PWM"
+    }).mode, 3);
 
     test.done();
   }
