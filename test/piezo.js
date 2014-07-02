@@ -153,9 +153,6 @@ exports["Piezo"] = {
     test.done();
   },
 
-<<<<<<< HEAD
-  play: function(test) {
-=======
   noToneStopsExistingTone: function(test) {
     test.expect(2);
     
@@ -169,8 +166,7 @@ exports["Piezo"] = {
     test.done();
   },
 
-  song: function(test) {
->>>>>>> master
+  play: function(test) {
     test.expect(3);
 
     var returned = this.piezo.play({
