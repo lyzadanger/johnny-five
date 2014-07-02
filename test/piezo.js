@@ -13,15 +13,17 @@ exports["Piezo"] = {
       repl: false
     });
 
-    this.clock = sinon.useFakeTimers();
     this.spy = sinon.spy(this.board.io, "digitalWrite");
-
+    
     this.piezo = new Piezo({
       pin: 3,
-      board: this.board
+      board: this.board,
+      timer: this.timer
     });
 
     this.proto = [{
+      name: "frequency",
+    }, {
       name: "tone"
     }, {
       name: "noTone"
@@ -39,8 +41,6 @@ exports["Piezo"] = {
   },
 
   tearDown: function(done) {
-    this.clock.restore();
-
     done();
   },
 
@@ -106,6 +106,43 @@ exports["Piezo"] = {
     test.done();
   },
 
+  toneStopsAfterTime: function(test) {
+    test.expect(2);
+
+    this.piezo.tone(1915, 10);
+    var timerSpy = sinon.spy(this.piezo.timer, "clearInterval");
+
+    setTimeout(function() {
+      test.ok(timerSpy.called);
+      test.equal(this.piezo.timer, undefined);
+    
+      test.done();
+    }.bind(this), 20);
+  },
+
+  toneWhileNewToneIsPlayingCancelsExisting: function(test) {
+    test.expect(1);
+
+    this.piezo.tone(1915, 100);
+    var timerSpy = sinon.spy(this.piezo.timer, "clearInterval");
+    this.piezo.tone(1915, 100);
+
+    test.ok(timerSpy.called);
+    
+    test.done();
+  },
+
+  frequency: function(test) {
+    test.expect(2);
+    var toneSpy = sinon.spy(this.piezo, "tone");
+
+    var returned = this.piezo.frequency(440, 100);
+    test.ok(toneSpy.calledWith(1136, 100));
+    test.equal(returned, this.piezo);
+
+    test.done();
+  },
+
   noTone: function(test) {
     test.expect(2);
 
@@ -116,7 +153,24 @@ exports["Piezo"] = {
     test.done();
   },
 
+<<<<<<< HEAD
   play: function(test) {
+=======
+  noToneStopsExistingTone: function(test) {
+    test.expect(2);
+    
+    this.piezo.tone(500, 1000);
+    var timerSpy = sinon.spy(this.piezo.timer, "clearInterval");
+
+    this.piezo.noTone();
+    test.ok(timerSpy.called);
+    test.equal(this.piezo.timer, undefined);
+
+    test.done();
+  },
+
+  song: function(test) {
+>>>>>>> master
     test.expect(3);
 
     var returned = this.piezo.play({
