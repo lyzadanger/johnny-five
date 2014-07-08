@@ -13,15 +13,17 @@ exports["Piezo"] = {
       repl: false
     });
 
-    this.clock = sinon.useFakeTimers();
     this.spy = sinon.spy(this.board.io, "digitalWrite");
-
+    
     this.piezo = new Piezo({
       pin: 3,
-      board: this.board
+      board: this.board,
+      timer: this.timer
     });
 
     this.proto = [{
+      name: "frequency",
+    }, {
       name: "tone"
     }, {
       name: "noTone"
@@ -39,8 +41,6 @@ exports["Piezo"] = {
   },
 
   tearDown: function(done) {
-    this.clock.restore();
-
     done();
   },
 
@@ -48,31 +48,31 @@ exports["Piezo"] = {
     test.expect(25);
 
     var notes = {
-      "c4": 1911,
-      "c#4": 1803,
-      "d4": 1702,
-      "d#4": 1607,
-      "e4": 1516,
-      "f4": 1431,
-      "f#4": 1352,
-      "g4": 1275,
-      "g#4": 1203,
-      "a4": 1136,
-      "a#4": 1072,
-      "b4": 1012,
-      "c5": 955,
-      "c#5": 901,
-      "d5": 851,
-      "d#5": 803,
-      "e5": 768,
-      "f5": 715,
-      "f#5": 675,
-      "g5": 647,
-      "g#5": 601,
-      "a5": 568,
-      "a#5": 541,
-      "b5": 506,
-      "c6": 477
+      "c4": 262,
+      "c#4": 277,
+      "d4": 294,
+      "d#4": 311,
+      "e4": 330,
+      "f4": 349,
+      "f#4": 370,
+      "g4": 392,
+      "g#4": 415,
+      "a4": 440,
+      "a#4": 466,
+      "b4": 494,
+      "c5": 523,
+      "c#5": 554,
+      "d5": 587,
+      "d#5": 622,
+      "e5": 659,
+      "f5": 698,
+      "f#5": 740,
+      "g5": 784,
+      "g#5": 831,
+      "a5": 880,
+      "a#5": 932,
+      "b5": 988,
+      "c6": 1047
     };
 
     Object.keys(notes).forEach(function(note) {
@@ -106,12 +106,62 @@ exports["Piezo"] = {
     test.done();
   },
 
+  toneStopsAfterTime: function(test) {
+    test.expect(2);
+
+    this.piezo.tone(1915, 10);
+    var timerSpy = sinon.spy(this.piezo.timer, "clearInterval");
+
+    setTimeout(function() {
+      test.ok(timerSpy.called);
+      test.equal(this.piezo.timer, undefined);
+    
+      test.done();
+    }.bind(this), 20);
+  },
+
+  toneWhileNewToneIsPlayingCancelsExisting: function(test) {
+    test.expect(1);
+
+    this.piezo.tone(1915, 100);
+    var timerSpy = sinon.spy(this.piezo.timer, "clearInterval");
+    this.piezo.tone(1915, 100);
+
+    test.ok(timerSpy.called);
+    
+    test.done();
+  },
+
+  frequency: function(test) {
+    test.expect(2);
+    var toneSpy = sinon.spy(this.piezo, "tone");
+
+    var returned = this.piezo.frequency(440, 100);
+    test.ok(toneSpy.calledWith(1136, 100));
+    test.equal(returned, this.piezo);
+
+    test.done();
+  },
+
   noTone: function(test) {
     test.expect(2);
 
     var returned = this.piezo.noTone();
     test.ok(this.spy.calledWith(3, 0));
     test.equal(returned, this.piezo);
+
+    test.done();
+  },
+
+  noToneStopsExistingTone: function(test) {
+    test.expect(2);
+    
+    this.piezo.tone(500, 1000);
+    var timerSpy = sinon.spy(this.piezo.timer, "clearInterval");
+
+    this.piezo.noTone();
+    test.ok(timerSpy.called);
+    test.equal(this.piezo.timer, undefined);
 
     test.done();
   },
